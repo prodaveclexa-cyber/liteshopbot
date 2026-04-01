@@ -26,6 +26,16 @@ BACKEND_API_URL = os.getenv("BACKEND_API_URL", "https://liteshop-backend.onrende
 ADMIN_API_KEY = os.getenv("ADMIN_API_KEY", "").strip()
 ADMIN_WEB_URL = os.getenv("ADMIN_WEB_URL", "").rstrip("/")
 
+PAYMENT_RUB_BANK = os.getenv("PAYMENT_RUB_BANK", "ЮMoney")
+PAYMENT_RUB_CARD = os.getenv("PAYMENT_RUB_CARD", "2204 1201 2718 5599")
+PAYMENT_RUB_RECEIVER = os.getenv("PAYMENT_RUB_RECEIVER", "Алексей")
+PAYMENT_KZT_BANK = os.getenv("PAYMENT_KZT_BANK", "Alatay City Bank")
+PAYMENT_KZT_CARD = os.getenv("PAYMENT_KZT_CARD", "5395 4550 1113 0349")
+PAYMENT_KZT_RECEIVER = os.getenv("PAYMENT_KZT_RECEIVER", "Алексей")
+PAYMENT_USDT_TRC20 = os.getenv("PAYMENT_USDT_TRC20", "TSKBVVz83xPzpHivq9Ct7UhDR8gdgYLWYD")
+PAYMENT_USDT_TON = os.getenv("PAYMENT_USDT_TON", "UQDgwuttWXDJTqYzPq3X2vJEd4dzOIrHvf6zbn3D4v1HRSZM")
+PAYMENT_TON = os.getenv("PAYMENT_TON", "UQBVvxAeV6jaP8K-cXEx8BNqr-Y6s4JCXpIDlBqYwjt6N")
+
 if not BOT_TOKEN:
     raise ValueError("BOT_TOKEN не найден в .env")
 if not ADMIN_ID:
@@ -52,8 +62,8 @@ def main_keyboard() -> ReplyKeyboardMarkup:
 def payment_keyboard() -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text="Оплатить Stars")],
-            [KeyboardButton(text="Оплатить Crypto")],
+            [KeyboardButton(text="Оплатить Stars"), KeyboardButton(text="Оплатить в рублях")],
+            [KeyboardButton(text="Оплатить в тенге"), KeyboardButton(text="Оплатить криптой")],
             [KeyboardButton(text="В меню")],
         ],
         resize_keyboard=True,
@@ -111,7 +121,7 @@ def format_admin_user(user) -> str:
 
 def format_admin_order_text(user, order: dict, total_stars: int) -> str:
     lines = ["НОВЫЙ ЗАКАЗ", "", format_admin_user(user), ""]
-    lines.append(f"Заказ: {order.get('id', 'без id')}")
+    lines.append(f"Заказ: {order.get('id', order.get('order_id', 'без id'))}")
     lines.append(f"Статус: {order.get('status', 'pending')}")
     lines.extend(["", "Товары:"])
     for item in order.get("items", []):
@@ -133,7 +143,7 @@ def format_admin_order_text(user, order: dict, total_stars: int) -> str:
 def format_admin_paid_text(user, order: dict | None, stars_paid: int) -> str:
     lines = ["ОПЛАТА ПРОШЛА УСПЕШНО", "", format_admin_user(user), ""]
     if order:
-        lines.append(f"Заказ: {order.get('id', 'без id')}")
+        lines.append(f"Заказ: {order.get('id', order.get('order_id', 'без id'))}")
         lines.append(f"Статус: {order.get('status', 'paid')}")
         lines.extend(["", "Оплаченные товары:"])
         for item in order.get("items", []):
@@ -157,6 +167,57 @@ def format_recent_orders(items: list[dict]) -> str:
             f"{item.get('total_rub', 0)} ₽ | {username}"
         )
     return "\n".join(lines)
+
+
+def format_manual_payment_text(order: dict, method: str) -> str:
+    order_id = order.get("order_id", "без id")
+    total_rub = order.get("total_rub", 0)
+
+    if method == "rub":
+        return (
+            f"Оплата в рублях\n\n"
+            f"Номер заказа: {order_id}\n"
+            f"Сумма: {total_rub} ₽\n\n"
+            f"Реквизиты:\n"
+            f"Банк: {PAYMENT_RUB_BANK}\n"
+            f"Карта: {PAYMENT_RUB_CARD}\n"
+            f"Получатель: {PAYMENT_RUB_RECEIVER}\n\n"
+            f"Инструкция:\n"
+            f"1. Переведи точную сумму.\n"
+            f"2. Сохрани чек или скрин.\n"
+            f"3. Отправь сюда скрин оплаты и номер заказа {order_id}."
+        )
+
+    if method == "kzt":
+        approx_kzt = round(float(total_rub) * 6.0, 2)
+        return (
+            f"Оплата в тенге\n\n"
+            f"Номер заказа: {order_id}\n"
+            f"Сумма к оплате: {approx_kzt} ₸\n"
+            f"Ориентир в рублях: {total_rub} ₽\n\n"
+            f"Реквизиты:\n"
+            f"Банк: {PAYMENT_KZT_BANK}\n"
+            f"Карта: {PAYMENT_KZT_CARD}\n"
+            f"Получатель: {PAYMENT_KZT_RECEIVER}\n\n"
+            f"Инструкция:\n"
+            f"1. Переведи сумму в тенге.\n"
+            f"2. Сохрани чек или скрин.\n"
+            f"3. Отправь сюда скрин оплаты и номер заказа {order_id}."
+        )
+
+    return (
+        f"Оплата криптой\n\n"
+        f"Номер заказа: {order_id}\n"
+        f"Сумма заказа: {total_rub} ₽\n\n"
+        f"Кошельки:\n"
+        f"USDT TRC20\n{PAYMENT_USDT_TRC20}\n\n"
+        f"USDT TON\n{PAYMENT_USDT_TON}\n\n"
+        f"TON\n{PAYMENT_TON}\n\n"
+        f"Инструкция:\n"
+        f"1. Выбери подходящую сеть и кошелёк.\n"
+        f"2. После перевода отправь сюда txid или скрин.\n"
+        f"3. Обязательно укажи номер заказа {order_id}."
+    )
 
 
 async def notify_admin(text: str) -> None:
@@ -187,6 +248,22 @@ async def set_backend_order_status(order_id: str, status: str) -> None:
         {"status": status},
         True,
     )
+
+
+async def notify_manual_payment_request(user, order: dict, method: str) -> None:
+    method_map = {
+        "rub": "рубли",
+        "kzt": "тенге",
+        "crypto": "крипта",
+    }
+    text = (
+        "ЗАПРОС НА РУЧНУЮ ОПЛАТУ\n\n"
+        f"{format_admin_user(user)}\n\n"
+        f"Заказ: {order.get('order_id', 'без id')}\n"
+        f"Метод: {method_map.get(method, method)}\n"
+        f"Сумма: {order.get('total_rub', 0)} ₽"
+    )
+    await notify_admin(text)
 
 
 @dp.message(CommandStart())
@@ -267,6 +344,7 @@ async def webapp_data_handler(message: Message):
 
     user_orders[message.from_user.id] = {
         "order_id": backend_order["id"],
+        "id": backend_order["id"],
         "items": backend_order["items"],
         "total_rub": total_rub,
         "total_stars": total_stars,
@@ -277,7 +355,13 @@ async def webapp_data_handler(message: Message):
         format_order_text(backend_order["items"], total_rub, backend_order["id"]),
         reply_markup=payment_keyboard(),
     )
-    await message.answer(f"Выбери способ оплаты.\n\nStars: {total_stars}\nКурс: {STARS_RATE} Stars = 1 ₽")
+    await message.answer(
+        "Выбери способ оплаты.\n\n"
+        f"Stars: {total_stars}\n"
+        f"Рубли: {total_rub} ₽\n"
+        f"Тенге: ориентир 1 ₽ ≈ 6 ₸\n"
+        "Крипта: USDT TRC20 / USDT TON / TON"
+    )
     await notify_admin(format_admin_order_text(message.from_user, backend_order, total_stars))
 
 
@@ -344,18 +428,34 @@ async def successful_payment_handler(message: Message):
     await notify_admin(format_admin_paid_text(message.from_user, order, payment.total_amount))
 
 
-@dp.message(F.text == "Оплатить Crypto")
+@dp.message(F.text == "Оплатить в рублях")
+async def rub_handler(message: Message):
+    order = user_orders.get(message.from_user.id)
+    if not order:
+        await message.answer("Сначала оформи заказ через магазин.")
+        return
+    await message.answer(format_manual_payment_text(order, "rub"))
+    await notify_manual_payment_request(message.from_user, order, "rub")
+
+
+@dp.message(F.text == "Оплатить в тенге")
+async def kzt_handler(message: Message):
+    order = user_orders.get(message.from_user.id)
+    if not order:
+        await message.answer("Сначала оформи заказ через магазин.")
+        return
+    await message.answer(format_manual_payment_text(order, "kzt"))
+    await notify_manual_payment_request(message.from_user, order, "kzt")
+
+
+@dp.message(F.text == "Оплатить криптой")
 async def crypto_handler(message: Message):
     order = user_orders.get(message.from_user.id)
     if not order:
         await message.answer("Сначала оформи заказ через магазин.")
         return
-    await message.answer(
-        "Крипто-оплата пока в режиме заглушки.\n\n"
-        f"Номер заказа: {order['order_id']}\n"
-        f"Сумма заказа: {order['total_rub']} ₽\n"
-        "Следующим этапом сюда можно подключить TON или USDT."
-    )
+    await message.answer(format_manual_payment_text(order, "crypto"))
+    await notify_manual_payment_request(message.from_user, order, "crypto")
 
 
 @dp.message(F.text == "Последние заказы")
@@ -378,6 +478,9 @@ async def main():
     print("ADMIN_WEB_URL =", ADMIN_WEB_URL or "not set")
     await dp.start_polling(bot)
 
+
+if __name__ == "__main__":
+    asyncio.run(main())
 
 if __name__ == "__main__":
     asyncio.run(main())
