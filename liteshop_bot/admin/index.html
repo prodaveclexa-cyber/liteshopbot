@@ -19,6 +19,13 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
     body { background: radial-gradient(circle at top, #143121 0%, var(--bg) 55%); color: var(--text); padding: 20px; }
     .app { max-width: 1280px; margin: 0 auto; }
+    .locked .panel,
+    .locked .stats,
+    .locked .grid {
+      filter: blur(10px);
+      pointer-events: none;
+      user-select: none;
+    }
     .topbar { display: flex; justify-content: space-between; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
     .brand { font-size: 34px; font-weight: 800; }
     .subtitle { color: var(--muted); margin-top: 6px; font-size: 14px; }
@@ -115,6 +122,37 @@
     }
     .status { margin-top: 12px; color: var(--accent); font-size: 14px; min-height: 20px; }
     .empty { color: var(--muted); padding: 18px 0; }
+    .lock-screen {
+      position: fixed;
+      inset: 0;
+      background: rgba(4, 10, 8, 0.72);
+      backdrop-filter: blur(12px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 1000;
+    }
+    .locked .lock-screen { display: flex; }
+    .lock-card {
+      width: min(100%, 420px);
+      border-radius: 28px;
+      background: rgba(12, 24, 19, 0.96);
+      border: 1px solid var(--line);
+      padding: 24px;
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+    }
+    .lock-title {
+      font-size: 26px;
+      font-weight: 800;
+      margin-bottom: 10px;
+    }
+    .lock-text {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+      margin-bottom: 16px;
+    }
     @media (max-width: 1100px) {
       .grid { grid-template-columns: 1fr; }
       .stats { grid-template-columns: repeat(3, 1fr); }
@@ -125,7 +163,7 @@
     }
   </style>
 </head>
-<body>
+<body class="locked">
   <div class="app">
     <div class="topbar">
       <div>
@@ -250,12 +288,30 @@
     </div>
   </div>
 
+  <div class="lock-screen" id="lockScreen">
+    <div class="lock-card">
+      <div class="lock-title">Доступ к админке</div>
+      <div class="lock-text">
+        Введи `Admin API key`, чтобы открыть товары и заказы. Без ключа админка не будет загружать данные.
+      </div>
+      <div class="field">
+        <label for="lockAdminKey">Admin API key</label>
+        <input id="lockAdminKey" type="password" placeholder="Вставь ключ и нажми открыть" />
+      </div>
+      <div class="btn-row">
+        <button class="btn" type="button" onclick="unlockAdmin()">Открыть админку</button>
+      </div>
+      <div class="note">Ключ сохраняется только в браузере этого устройства.</div>
+    </div>
+  </div>
+
   <script>
     const PLACEHOLDER = "https://placehold.co/600x320/173425/ffffff?text=Preview";
     let products = [];
     let orders = [];
     let summary = null;
     let editingId = null;
+    let isUnlocked = false;
 
     function apiBase() {
       return document.getElementById("apiBase").value.trim().replace(/\/$/, "");
@@ -284,6 +340,11 @@
         cancelled: "Отменён"
       };
       return map[status] || status;
+    }
+
+    function applyLockState(locked) {
+      document.body.classList.toggle("locked", locked);
+      isUnlocked = !locked;
     }
 
     function updatePreview() {
@@ -396,6 +457,9 @@
     }
 
     async function request(path, options = {}) {
+      if (!adminKey()) {
+        throw new Error("Укажи Admin API key");
+      }
       const response = await fetch(apiBase() + path, {
         headers: {
           "Content-Type": "application/json",
@@ -413,6 +477,13 @@
 
     async function loadAll(options = {}) {
       const { silent = false } = options;
+      if (!adminKey()) {
+        applyLockState(true);
+        if (!silent) {
+          setStatus("Сначала введи Admin API key", true);
+        }
+        return;
+      }
       try {
         const [productsData, summaryData] = await Promise.all([
           request("/products?include_hidden=true"),
@@ -424,10 +495,14 @@
         renderStats();
         renderProducts();
         await loadOrders(true);
+        applyLockState(false);
         if (!silent) {
           setStatus("Данные обновлены");
         }
       } catch (error) {
+        if (String(error.message || "").includes("Invalid admin key")) {
+          applyLockState(true);
+        }
         setStatus(error.message, true);
       }
     }
@@ -589,6 +664,7 @@
 
     function saveAdminKey() {
       localStorage.setItem("liteshop_admin_key", adminKey());
+      document.getElementById("lockAdminKey").value = adminKey();
       setStatus("Admin key сохранён");
       loadAll();
     }
@@ -596,17 +672,33 @@
     function clearAdminKey() {
       localStorage.removeItem("liteshop_admin_key");
       document.getElementById("adminKey").value = "";
+      document.getElementById("lockAdminKey").value = "";
       orders = [];
       renderOrders();
+      applyLockState(true);
       setStatus("Admin key сброшен");
+    }
+
+    function unlockAdmin() {
+      const key = document.getElementById("lockAdminKey").value.trim();
+      if (!key) {
+        setStatus("Введи Admin API key", true);
+        return;
+      }
+      document.getElementById("adminKey").value = key;
+      saveAdminKey();
     }
 
     document.getElementById("apiBase").value = window.LITESHOP_CONFIG?.API_BASE_URL || "";
     document.getElementById("adminKey").value = localStorage.getItem("liteshop_admin_key") || "";
+    document.getElementById("lockAdminKey").value = localStorage.getItem("liteshop_admin_key") || "";
     resetForm();
-    loadAll();
+    if (adminKey()) {
+      loadAll();
+    } else {
+      applyLockState(true);
+    }
   </script>
 </body>
 </html>
 
-</html>
