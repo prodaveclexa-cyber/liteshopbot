@@ -1,0 +1,24 @@
+[
+  {
+    "id": "test-1-rub",
+    "title": "Тестовая покупка",
+    "description": "Проверочный товар для оплаты и проверки сценариев магазина.",
+    "price_rub": 1.0,
+    "image": "https://placehold.co/600x320/0f3d27/ffffff?text=LiteShop+Test+1+RUB",
+    "banner": "https://placehold.co/1200x480/0f3d27/ffffff?text=LiteShop+Test+1+RUB",
+    "category": "Тест",
+    "in_stock": true,
+    "sort_order": 1
+  },
+  {
+    "id": "chatgpt-plus-1-month",
+    "title": "ChatGPT Plus на 1 месяц",
+    "description": "Тестовый пример полноценного товара в каталоге.",
+    "price_rub": 199.0,
+    "image": "https://placehold.co/600x320/15553a/ffffff?text=ChatGPT+Plus+1+Month",
+    "banner": "https://placehold.co/1200x480/15553a/ffffff?text=ChatGPT+Plus+1+Month",
+    "category": "Подписки",
+    "in_stock": true,
+    "sort_order": 2
+  }
+]

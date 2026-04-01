@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LiteShop</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="./config.js"></script>
+  <style>
+    :root {
+      --bg: #07120e;
+      --card: #0f1f18;
+      --card-2: #142920;
+      --line: #1d6a45;
+      --text: #f4fff8;
+      --muted: #96cfb1;
+      --accent: #60f0a1;
+      --accent-2: #1dbd69;
+      --danger: #ff7e7e;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+    body { background: radial-gradient(circle at top, #13301f 0%, var(--bg) 55%); color: var(--text); }
+    .app { max-width: 430px; margin: 0 auto; min-height: 100vh; padding: 16px 16px 96px; }
+    .page { display: none; }
+    .page.active { display: block; }
+    .topbar { margin-bottom: 18px; }
+    .brand { font-size: 30px; font-weight: 800; }
+    .subtitle { color: var(--muted); margin-top: 6px; font-size: 14px; }
+    .hero {
+      padding: 22px;
+      border-radius: 24px;
+      background: linear-gradient(135deg, #17603d, #54e79b);
+      color: #072112;
+      margin-bottom: 20px;
+      box-shadow: 0 18px 40px rgba(14, 71, 42, 0.35);
+    }
+    .hero-badge {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.22);
+      margin-bottom: 10px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .hero h1 { font-size: 24px; margin-bottom: 8px; }
+    .hero p { font-size: 14px; line-height: 1.45; }
+    .section { margin-bottom: 22px; }
+    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .section-title { font-size: 20px; font-weight: 800; }
+    .section-link { color: var(--accent); cursor: pointer; font-size: 14px; }
+    .chips { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px; }
+    .chip {
+      flex-shrink: 0;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: rgba(17, 42, 29, 0.92);
+      color: var(--text);
+      padding: 12px 16px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .list { display: grid; gap: 14px; }
+    .card {
+      background: linear-gradient(180deg, rgba(18, 38, 28, 0.96), rgba(11, 23, 17, 0.96));
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      overflow: hidden;
+    }
+    .card img {
+      width: 100%;
+      height: 170px;
+      object-fit: cover;
+      background: #173525;
+      display: block;
+    }
+    .card-body { padding: 16px; }
+    .category { color: var(--muted); font-size: 13px; margin-bottom: 8px; }
+    .title { font-size: 18px; font-weight: 800; margin-bottom: 8px; }
+    .description { color: #d6f9e2; font-size: 13px; line-height: 1.45; margin-bottom: 12px; }
+    .price-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .price { color: var(--accent); font-size: 22px; font-weight: 800; }
+    .btn {
+      border: none;
+      border-radius: 14px;
+      padding: 13px 16px;
+      background: linear-gradient(135deg, var(--accent-2), var(--accent));
+      color: #062112;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .btn-secondary {
+      width: 100%;
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--line);
+    }
+    .box {
+      background: rgba(12, 26, 19, 0.94);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 18px;
+    }
+    .cart-item { padding: 14px 0; border-bottom: 1px solid rgba(96, 240, 161, 0.14); }
+    .cart-item:last-child { border-bottom: none; }
+    .cart-title { font-size: 17px; font-weight: 800; margin-bottom: 6px; }
+    .cart-line { color: var(--muted); font-size: 13px; margin-bottom: 8px; }
+    .cart-actions { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .qty-controls { display: flex; align-items: center; gap: 8px; }
+    .qty-btn {
+      width: 32px; height: 32px; border-radius: 10px; border: 1px solid var(--line);
+      background: transparent; color: var(--text); cursor: pointer; font-weight: 800;
+    }
+    .total {
+      margin-top: 16px;
+      padding: 16px;
+      border-radius: 18px;
+      background: #12271e;
+      border: 1px solid var(--line);
+      font-size: 20px;
+      font-weight: 800;
+    }
+    .empty, .loading { color: var(--muted); padding: 14px 0; }
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 430px;
+      background: rgba(8, 19, 14, 0.97);
+      border-top: 1px solid var(--line);
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      padding: 10px 8px 14px;
+      backdrop-filter: blur(12px);
+    }
+    .nav-btn {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      display: grid;
+      gap: 4px;
+      place-items: center;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .nav-btn.active { color: var(--text); }
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 94px;
+      transform: translateX(-50%) translateY(20px);
+      opacity: 0;
+      pointer-events: none;
+      transition: 0.2s ease;
+      background: #10251a;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px 16px;
+      min-width: 220px;
+      text-align: center;
+      color: var(--text);
+      font-size: 14px;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <section id="homePage" class="page active">
+      <div class="topbar">
+        <div class="brand">LiteShop</div>
+        <div class="subtitle">Магазин внутриигровых товаров</div>
+      </div>
+
+      <div class="hero">
+        <div class="hero-badge">MINI APP</div>
+        <h1>Покупай быстро прямо внутри Telegram</h1>
+        <p>Выбирай товар, добавляй его в корзину и оплачивай заказ через Stars. Тестовый товар за 1 рубль уже добавлен.</p>
+      </div>
+
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title">Категории</div>
+          <div class="section-link" onclick="showPage('catalog')">Открыть каталог</div>
+        </div>
+        <div id="categoryChips" class="chips"></div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title">Популярное</div>
+        </div>
+        <div id="featuredProducts" class="list">
+          <div class="loading">Загрузка товаров...</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="catalogPage" class="page">
+      <div class="topbar">
+        <div class="brand">Каталог</div>
+        <div class="subtitle">Все доступные товары</div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title" id="catalogTitle">Все товары</div>
+          <div class="section-link" onclick="setCategoryFilter('all')">Сбросить</div>
+        </div>
+        <div id="catalogProducts" class="list">
+          <div class="loading">Загрузка товаров...</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="cartPage" class="page">
+      <div class="topbar">
+        <div class="brand">Корзина</div>
+        <div class="subtitle">Проверь товары перед оплатой</div>
+      </div>
+      <div id="cartContent"></div>
+    </section>
+  </div>
+
+  <div class="bottom-nav">
+    <button class="nav-btn active" id="nav-home" onclick="showPage('home')">Главная</button>
+    <button class="nav-btn" id="nav-catalog" onclick="showPage('catalog')">Каталог</button>
+    <button class="nav-btn" id="nav-cart" onclick="showPage('cart')">Корзина</button>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+      tg.ready();
+      tg.expand();
+    }
+
+    const API = (window.LITESHOP_CONFIG?.API_BASE_URL || "").replace(/\/$/, "");
+    const PLACEHOLDER = "https://placehold.co/600x320/173525/ffffff?text=LiteShop";
+
+    let products = [];
+    let categoryFilter = "all";
+    let toastTimer = null;
+    let cart = JSON.parse(localStorage.getItem("liteshop_cart_v2") || "[]");
+
+    function showToast(text) {
+      const el = document.getElementById("toast");
+      el.textContent = text;
+      el.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => el.classList.remove("show"), 1800);
+    }
+
+    function formatPrice(value) {
+      return Number(value).toLocaleString("ru-RU", { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + " ₽";
+    }
+
+    function persistCart() {
+      localStorage.setItem("liteshop_cart_v2", JSON.stringify(cart));
+    }
+
+    function getCategories() {
+      return [...new Set(products.map(item => item.category || "Без категории"))];
+    }
+
+    function renderCategoryChips() {
+      const categories = getCategories();
+      const container = document.getElementById("categoryChips");
+      container.innerHTML = [
+        `<button class="chip" onclick="setCategoryFilter('all')">Все</button>`,
+        ...categories.map(category => `<button class="chip" onclick="setCategoryFilter(${JSON.stringify(category)})">${category}</button>`)
+      ].join("");
+    }
+
+    function getVisibleProducts() {
+      if (categoryFilter === "all") return products;
+      return products.filter(item => item.category === categoryFilter);
+    }
+
+    function renderProductCard(product) {
+      const image = product.image || product.banner || PLACEHOLDER;
+      return `
+        <article class="card">
+          <img src="${image}" alt="${product.title}" onerror="this.src='${PLACEHOLDER}'" />
+          <div class="card-body">
+            <div class="category">${product.category || "Без категории"}</div>
+            <div class="title">${product.title}</div>
+            <div class="description">${product.description || "Описание пока не заполнено."}</div>
+            <div class="price-row">
+              <div class="price">${formatPrice(product.price_rub)}</div>
+              <button class="btn" onclick="addToCart('${product.id}')">В корзину</button>
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    function renderFeatured() {
+      const container = document.getElementById("featuredProducts");
+      if (!products.length) {
+        container.innerHTML = `<div class="empty">Товаров пока нет.</div>`;
+        return;
+      }
+      container.innerHTML = products.slice(0, 4).map(renderProductCard).join("");
+    }
+
+    function renderCatalog() {
+      const visible = getVisibleProducts();
+      document.getElementById("catalogTitle").textContent = categoryFilter === "all" ? "Все товары" : categoryFilter;
+      const container = document.getElementById("catalogProducts");
+      if (!visible.length) {
+        container.innerHTML = `<div class="empty">В этой категории товаров пока нет.</div>`;
+        return;
+      }
+      container.innerHTML = visible.map(renderProductCard).join("");
+    }
+
+    function setCategoryFilter(category) {
+      categoryFilter = category;
+      showPage("catalog");
+      renderCatalog();
+    }
+
+    function showPage(page) {
+      document.querySelectorAll(".page").forEach(node => node.classList.remove("active"));
+      document.querySelectorAll(".nav-btn").forEach(node => node.classList.remove("active"));
+      document.getElementById(page + "Page").classList.add("active");
+      document.getElementById("nav-" + page).classList.add("active");
+      if (page === "cart") renderCart();
+    }
+
+    function addToCart(productId) {
+      const product = products.find(item => item.id === productId);
+      if (!product) return;
+
+      const existing = cart.find(item => item.product_id === productId);
+      if (existing) {
+        existing.qty += 1;
+      } else {
+        cart.push({
+          product_id: product.id,
+          title: product.title,
+          category: product.category,
+          price_rub: Number(product.price_rub),
+          qty: 1
+        });
+      }
+
+      persistCart();
+      tg?.HapticFeedback?.impactOccurred("light");
+      showToast(`Добавлено: ${product.title}`);
+      renderCart();
+    }
+
+    function changeQty(productId, delta) {
+      const item = cart.find(entry => entry.product_id === productId);
+      if (!item) return;
+      item.qty += delta;
+      if (item.qty <= 0) {
+        cart = cart.filter(entry => entry.product_id !== productId);
+      }
+      persistCart();
+      renderCart();
+    }
+
+    function renderCart() {
+      const container = document.getElementById("cartContent");
+      if (!cart.length) {
+        container.innerHTML = `<div class="box"><div class="empty">Корзина пока пустая. Добавь товары из каталога.</div></div>`;
+        return;
+      }
+
+      const total = cart.reduce((sum, item) => sum + (Number(item.price_rub) * Number(item.qty)), 0);
+      container.innerHTML = `
+        <div class="box">
+          ${cart.map(item => `
+            <div class="cart-item">
+              <div class="cart-title">${item.title}</div>
+              <div class="cart-line">${item.category || "Без категории"}</div>
+              <div class="cart-actions">
+                <div class="price">${formatPrice(item.price_rub * item.qty)}</div>
+                <div class="qty-controls">
+                  <button class="qty-btn" onclick="changeQty('${item.product_id}', -1)">-</button>
+                  <div>${item.qty}</div>
+                  <button class="qty-btn" onclick="changeQty('${item.product_id}', 1)">+</button>
+                </div>
+              </div>
+            </div>
+          `).join("")}
+          <div class="total">Итого: ${formatPrice(total)}</div>
+          <button class="btn" style="width:100%;margin-top:14px;" onclick="checkout()">Оформить заказ</button>
+          <button class="btn btn-secondary" style="margin-top:10px;" onclick="clearCart()">Очистить корзину</button>
+        </div>
+      `;
+    }
+
+    function clearCart() {
+      cart = [];
+      persistCart();
+      renderCart();
+      showToast("Корзина очищена");
+    }
+
+    function checkout() {
+      if (!cart.length) {
+        showToast("Корзина пустая");
+        return;
+      }
+
+      const payload = {
+        action: "checkout",
+        items: cart.map(item => ({
+          product_id: item.product_id,
+          title: item.title,
+          category: item.category,
+          qty: item.qty,
+          price_rub: item.price_rub,
+          line_total_rub: Number(item.price_rub) * Number(item.qty)
+        })),
+        total_rub: cart.reduce((sum, item) => sum + (Number(item.price_rub) * Number(item.qty)), 0)
+      };
+
+      tg?.sendData(JSON.stringify(payload));
+      showToast("Заказ отправлен в бот");
+    }
+
+    async function loadProducts() {
+      if (!API) {
+        products = [];
+        showToast("Не настроен адрес backend");
+        renderCategoryChips();
+        renderFeatured();
+        renderCatalog();
+        renderCart();
+        return;
+      }
+
+      try {
+        const response = await fetch(API + "/products");
+        const data = await response.json();
+        if (!response.ok || !data.ok) {
+          throw new Error("Не удалось загрузить каталог");
+        }
+        products = data.items || [];
+      } catch (error) {
+        products = [];
+        showToast("Backend недоступен");
+      }
+
+      renderCategoryChips();
+      renderFeatured();
+      renderCatalog();
+      renderCart();
+    }
+
+    loadProducts();
+  </script>
+</body>
+</html>
