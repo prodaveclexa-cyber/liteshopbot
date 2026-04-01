@@ -2,9 +2,10 @@ import asyncio
 import json
 import math
 import os
+from urllib import error, request
 
 from aiogram import Bot, Dispatcher, F
-from aiogram.filters import CommandStart
+from aiogram.filters import Command, CommandStart
 from aiogram.types import (
     KeyboardButton,
     LabeledPrice,
@@ -21,13 +22,14 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 ADMIN_ID = int(os.getenv("ADMIN_ID", "0"))
 WEBAPP_URL = os.getenv("WEBAPP_URL", "").rstrip("/")
 STARS_RATE = float(os.getenv("STARS_RATE", "1.8"))
+BACKEND_API_URL = os.getenv("BACKEND_API_URL", "https://liteshop-backend.onrender.com/api").rstrip("/")
+ADMIN_API_KEY = os.getenv("ADMIN_API_KEY", "").strip()
+ADMIN_WEB_URL = os.getenv("ADMIN_WEB_URL", "").rstrip("/")
 
 if not BOT_TOKEN:
     raise ValueError("BOT_TOKEN не найден в .env")
-
 if not ADMIN_ID:
     raise ValueError("ADMIN_ID не найден в .env")
-
 if not WEBAPP_URL:
     raise ValueError("WEBAPP_URL не найден в .env")
 
@@ -36,16 +38,13 @@ dp = Dispatcher()
 user_orders: dict[int, dict] = {}
 
 
+def is_admin(user_id: int) -> bool:
+    return user_id == ADMIN_ID
+
+
 def main_keyboard() -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
-        keyboard=[
-            [
-                KeyboardButton(
-                    text="Открыть магазин",
-                    web_app=WebAppInfo(url=WEBAPP_URL),
-                )
-            ]
-        ],
+        keyboard=[[KeyboardButton(text="Открыть магазин", web_app=WebAppInfo(url=WEBAPP_URL))]],
         resize_keyboard=True,
     )
 
@@ -61,8 +60,44 @@ def payment_keyboard() -> ReplyKeyboardMarkup:
     )
 
 
-def format_order_text(items: list[dict], total_rub: float) -> str:
+def admin_keyboard() -> ReplyKeyboardMarkup:
+    rows = [[KeyboardButton(text="Последние заказы")], [KeyboardButton(text="В меню")]]
+    if ADMIN_WEB_URL:
+        rows.insert(0, [KeyboardButton(text="Открыть админку", web_app=WebAppInfo(url=ADMIN_WEB_URL))])
+    return ReplyKeyboardMarkup(keyboard=rows, resize_keyboard=True)
+
+
+def api_request(path: str, method: str = "GET", payload: dict | None = None, admin: bool = False) -> dict:
+    headers = {"Content-Type": "application/json"}
+    if admin and ADMIN_API_KEY:
+        headers["x-admin-key"] = ADMIN_API_KEY
+
+    req = request.Request(
+        url=f"{BACKEND_API_URL}{path}",
+        data=json.dumps(payload).encode("utf-8") if payload is not None else None,
+        headers=headers,
+        method=method,
+    )
+    try:
+        with request.urlopen(req, timeout=20) as response:
+            raw = response.read().decode("utf-8")
+            return json.loads(raw) if raw else {}
+    except error.HTTPError as exc:
+        body = exc.read().decode("utf-8", errors="ignore")
+        try:
+            parsed = json.loads(body)
+            detail = parsed.get("detail") or parsed.get("error") or body
+        except Exception:
+            detail = body or str(exc)
+        raise RuntimeError(detail) from exc
+    except Exception as exc:
+        raise RuntimeError(str(exc)) from exc
+
+
+def format_order_text(items: list[dict], total_rub: float, order_id: str | None = None) -> str:
     lines = ["Новый заказ", ""]
+    if order_id:
+        lines.extend([f"Номер заказа: {order_id}", ""])
     for item in items:
         lines.append(f"• {item.get('title', 'Товар')} x{item.get('qty', 1)} — {item.get('line_total_rub', 0)} ₽")
     lines.extend(["", f"Итого: {total_rub} ₽"])
@@ -74,29 +109,53 @@ def format_admin_user(user) -> str:
     return f"Пользователь: {user.full_name}\nID: {user.id}\nUsername: {username}"
 
 
-def format_admin_order_text(user, items: list[dict], total_rub: float, total_stars: int) -> str:
-    lines = ["НОВЫЙ ЗАКАЗ", "", format_admin_user(user), "", "Товары:"]
-    for item in items:
+def format_admin_order_text(user, order: dict, total_stars: int) -> str:
+    lines = ["НОВЫЙ ЗАКАЗ", "", format_admin_user(user), ""]
+    lines.append(f"Заказ: {order.get('id', 'без id')}")
+    lines.append(f"Статус: {order.get('status', 'pending')}")
+    lines.extend(["", "Товары:"])
+    for item in order.get("items", []):
         lines.append(
             f"• {item.get('title', 'Товар')} ({item.get('category', 'Без категории')}) "
             f"x{item.get('qty', 1)} — {item.get('line_total_rub', 0)} ₽"
         )
-    lines.extend(["", f"Сумма в рублях: {total_rub} ₽", f"Сумма в Stars: {total_stars}", f"Курс: {STARS_RATE} Stars = 1 ₽"])
+    lines.extend(
+        [
+            "",
+            f"Сумма в рублях: {order.get('total_rub', 0)} ₽",
+            f"Сумма в Stars: {total_stars}",
+            f"Курс: {STARS_RATE} Stars = 1 ₽",
+        ]
+    )
     return "\n".join(lines)
 
 
 def format_admin_paid_text(user, order: dict | None, stars_paid: int) -> str:
     lines = ["ОПЛАТА ПРОШЛА УСПЕШНО", "", format_admin_user(user), ""]
     if order:
-        lines.append("Оплаченные товары:")
+        lines.append(f"Заказ: {order.get('id', 'без id')}")
+        lines.append(f"Статус: {order.get('status', 'paid')}")
+        lines.extend(["", "Оплаченные товары:"])
         for item in order.get("items", []):
             lines.append(
                 f"• {item.get('title', 'Товар')} ({item.get('category', 'Без категории')}) "
                 f"x{item.get('qty', 1)} — {item.get('line_total_rub', 0)} ₽"
             )
-        lines.append("")
-        lines.append(f"Сумма заказа: {order.get('total_rub', 0)} ₽")
+        lines.extend(["", f"Сумма заказа: {order.get('total_rub', 0)} ₽"])
     lines.append(f"Оплачено Stars: {stars_paid}")
+    return "\n".join(lines)
+
+
+def format_recent_orders(items: list[dict]) -> str:
+    if not items:
+        return "Заказов пока нет."
+    lines = ["Последние заказы", ""]
+    for item in items:
+        username = item.get("username") or "без username"
+        lines.append(
+            f"• {item.get('id', 'без id')} | {item.get('status', 'pending')} | "
+            f"{item.get('total_rub', 0)} ₽ | {username}"
+        )
     return "\n".join(lines)
 
 
@@ -107,12 +166,77 @@ async def notify_admin(text: str) -> None:
         print("Ошибка отправки админу:", exc)
 
 
+async def create_backend_order(message: Message, items: list[dict]) -> dict:
+    payload = {
+        "user_id": message.from_user.id,
+        "username": message.from_user.username or "",
+        "payment_method": "stars",
+        "items": [{"product_id": item["product_id"], "qty": item.get("qty", 1)} for item in items],
+    }
+    response = await asyncio.to_thread(api_request, "/orders", "POST", payload, False)
+    return response["order"]
+
+
+async def set_backend_order_status(order_id: str, status: str) -> None:
+    if not ADMIN_API_KEY:
+        return
+    await asyncio.to_thread(
+        api_request,
+        f"/admin/orders/{order_id}/status",
+        "PUT",
+        {"status": status},
+        True,
+    )
+
+
 @dp.message(CommandStart())
 async def start_handler(message: Message):
     await message.answer(
         "Добро пожаловать в LiteShop.\n\nНажми кнопку ниже, чтобы открыть магазин.",
         reply_markup=main_keyboard(),
     )
+
+
+@dp.message(Command("admin"))
+async def admin_command(message: Message):
+    if not is_admin(message.from_user.id):
+        await message.answer("Эта команда доступна только админу.")
+        return
+    text = "Админ-режим открыт."
+    if ADMIN_WEB_URL:
+        text += "\n\nНиже можно открыть веб-админку или посмотреть последние заказы."
+    await message.answer(text, reply_markup=admin_keyboard())
+
+
+@dp.message(Command("orders"))
+async def orders_command(message: Message):
+    if not is_admin(message.from_user.id):
+        await message.answer("Эта команда доступна только админу.")
+        return
+    try:
+        response = await asyncio.to_thread(api_request, "/admin/orders?limit=10", "GET", None, True)
+        await message.answer(format_recent_orders(response.get("items", [])), reply_markup=admin_keyboard())
+    except RuntimeError as exc:
+        await message.answer(f"Не удалось загрузить заказы: {exc}", reply_markup=admin_keyboard())
+
+
+@dp.message(Command("status"))
+async def status_command(message: Message):
+    if not is_admin(message.from_user.id):
+        await message.answer("Эта команда доступна только админу.")
+        return
+
+    parts = message.text.split(maxsplit=2)
+    if len(parts) != 3:
+        await message.answer("Формат: /status <order_id> <pending|paid|processing|done|cancelled>")
+        return
+
+    _, order_id, status = parts
+    try:
+        await set_backend_order_status(order_id, status)
+        await message.answer(f"Статус заказа {order_id} обновлён: {status}", reply_markup=admin_keyboard())
+    except RuntimeError as exc:
+        await message.answer(f"Не удалось обновить статус: {exc}", reply_markup=admin_keyboard())
 
 
 @dp.message(F.web_app_data)
@@ -128,24 +252,33 @@ async def webapp_data_handler(message: Message):
         return
 
     items = data.get("items", [])
-    total_rub = float(data.get("total_rub", 0))
-
     if not items:
         await message.answer("Корзина пустая.")
         return
 
-    total_stars = math.ceil(total_rub * STARS_RATE)
+    try:
+        backend_order = await create_backend_order(message, items)
+    except RuntimeError as exc:
+        await message.answer(f"Не удалось создать заказ: {exc}")
+        return
+
+    total_rub = float(backend_order.get("total_rub", 0))
+    total_stars = max(1, math.ceil(total_rub * STARS_RATE))
+
     user_orders[message.from_user.id] = {
-        "items": items,
+        "order_id": backend_order["id"],
+        "items": backend_order["items"],
         "total_rub": total_rub,
         "total_stars": total_stars,
+        "status": backend_order.get("status", "pending"),
     }
 
-    await message.answer(format_order_text(items, total_rub), reply_markup=payment_keyboard())
     await message.answer(
-        f"Выбери способ оплаты.\n\nStars: {total_stars}\nКурс: {STARS_RATE} Stars = 1 ₽"
+        format_order_text(backend_order["items"], total_rub, backend_order["id"]),
+        reply_markup=payment_keyboard(),
     )
-    await notify_admin(format_admin_order_text(message.from_user, items, total_rub, total_stars))
+    await message.answer(f"Выбери способ оплаты.\n\nStars: {total_stars}\nКурс: {STARS_RATE} Stars = 1 ₽")
+    await notify_admin(format_admin_order_text(message.from_user, backend_order, total_stars))
 
 
 @dp.message(F.text == "Оплатить Stars")
@@ -165,6 +298,7 @@ async def stars_handler(message: Message):
         {
             "type": "stars_order",
             "user_id": message.from_user.id,
+            "order_id": order.get("order_id"),
             "items_count": len(items),
             "total_stars": total_stars,
         },
@@ -192,8 +326,16 @@ async def successful_payment_handler(message: Message):
     payment = message.successful_payment
     order = user_orders.pop(message.from_user.id, None)
 
+    if order and order.get("order_id"):
+        try:
+            await set_backend_order_status(order["order_id"], "paid")
+            order["status"] = "paid"
+        except RuntimeError as exc:
+            print("Не удалось обновить статус заказа:", exc)
+
     lines = ["Оплата прошла успешно.", "", f"Списано Stars: {payment.total_amount}"]
     if order:
+        lines.append(f"Номер заказа: {order['order_id']}")
         lines.append(f"Сумма заказа: {order['total_rub']} ₽")
     lines.extend(["", "Спасибо за покупку в LiteShop."])
 
@@ -208,12 +350,20 @@ async def crypto_handler(message: Message):
     if not order:
         await message.answer("Сначала оформи заказ через магазин.")
         return
-
     await message.answer(
         "Крипто-оплата пока в режиме заглушки.\n\n"
+        f"Номер заказа: {order['order_id']}\n"
         f"Сумма заказа: {order['total_rub']} ₽\n"
         "Следующим этапом сюда можно подключить TON или USDT."
     )
+
+
+@dp.message(F.text == "Последние заказы")
+async def latest_orders_button(message: Message):
+    if not is_admin(message.from_user.id):
+        await message.answer("Эта кнопка доступна только админу.")
+        return
+    await orders_command(message)
 
 
 @dp.message(F.text == "В меню")
@@ -224,8 +374,8 @@ async def menu_handler(message: Message):
 async def main():
     print("Бот запускается...")
     print("WEBAPP_URL =", WEBAPP_URL)
-    print("STARS_RATE =", STARS_RATE)
-    print("ADMIN_ID =", ADMIN_ID)
+    print("BACKEND_API_URL =", BACKEND_API_URL)
+    print("ADMIN_WEB_URL =", ADMIN_WEB_URL or "not set")
     await dp.start_polling(bot)
 
 
