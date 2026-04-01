@@ -9,7 +9,6 @@
     :root {
       --bg: #08130e;
       --panel: #102019;
-      --panel-2: #132922;
       --line: #1e6f46;
       --text: #f5fff8;
       --muted: #9cd3b4;
@@ -17,41 +16,25 @@
       --accent-2: #20b96a;
       --danger: #ff7e7e;
     }
-
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
-    body {
-      background: radial-gradient(circle at top, #143121 0%, var(--bg) 55%);
-      color: var(--text);
-      padding: 20px;
-    }
-    .app { max-width: 1220px; margin: 0 auto; }
+    body { background: radial-gradient(circle at top, #143121 0%, var(--bg) 55%); color: var(--text); padding: 20px; }
+    .app { max-width: 1280px; margin: 0 auto; }
     .topbar { display: flex; justify-content: space-between; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
     .brand { font-size: 34px; font-weight: 800; }
     .subtitle { color: var(--muted); margin-top: 6px; font-size: 14px; }
-    .api-box {
-      background: rgba(16, 32, 25, 0.92);
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      padding: 14px;
-      min-width: 320px;
-    }
-    .grid { display: grid; grid-template-columns: 420px 1fr; gap: 18px; }
-    .panel {
+    .api-box, .panel {
       background: rgba(16, 32, 25, 0.94);
       border: 1px solid var(--line);
       border-radius: 24px;
       padding: 18px;
-      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.2);
     }
-    .panel h2 { font-size: 22px; margin-bottom: 14px; }
-    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 18px; }
-    .stat {
-      background: rgba(19, 41, 34, 0.96);
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      padding: 16px;
-    }
-    .stat-value { font-size: 26px; font-weight: 800; color: var(--accent); margin-top: 8px; }
+    .api-box { min-width: 340px; }
+    .stats { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 18px; }
+    .stat { background: rgba(19, 41, 34, 0.96); border: 1px solid var(--line); border-radius: 18px; padding: 16px; }
+    .stat-value { font-size: 24px; font-weight: 800; color: var(--accent); margin-top: 8px; }
+    .grid { display: grid; grid-template-columns: 420px 1fr; gap: 18px; align-items: start; }
+    .stack { display: grid; gap: 18px; }
+    h2 { font-size: 22px; margin-bottom: 14px; }
     .field { margin-bottom: 14px; }
     .field label { display: block; margin-bottom: 8px; font-size: 14px; font-weight: 700; }
     .field input, .field textarea, .field select {
@@ -66,25 +49,30 @@
     }
     .field textarea { min-height: 110px; resize: vertical; }
     .inline { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .checkbox {
-      display: flex; align-items: center; gap: 10px;
-      border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; background: #0c1813;
-    }
+    .checkbox { display: flex; align-items: center; gap: 10px; border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; background: #0c1813; }
     .checkbox input { width: auto; }
-    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
-    .btn {
-      border: none;
+    .btn-row, .toolbar, .helper-row, .actions, .status-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn, .mini-btn, .action-btn {
       border-radius: 14px;
-      padding: 13px 16px;
+      padding: 12px 14px;
       font-size: 14px;
       font-weight: 800;
       cursor: pointer;
+    }
+    .btn {
+      border: none;
       background: linear-gradient(135deg, var(--accent-2), var(--accent));
       color: #082212;
       flex: 1;
       min-width: 150px;
     }
-    .btn-secondary { background: transparent; color: var(--text); border: 1px solid var(--line); }
+    .btn-secondary, .mini-btn, .action-btn {
+      border: 1px solid var(--line);
+      background: transparent;
+      color: var(--text);
+    }
+    .mini-btn { padding: 10px 12px; font-size: 13px; }
+    .danger { border-color: rgba(255, 126, 126, 0.4); color: var(--danger); }
     .preview-box {
       border: 1px dashed rgba(90, 242, 162, 0.4);
       border-radius: 18px;
@@ -100,58 +88,40 @@
       background: #183627;
       display: block;
     }
-    .toolbar { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
-    .toolbar input, .toolbar select {
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      background: #0c1813;
-      color: var(--text);
-      padding: 12px 14px;
-      font-size: 14px;
-    }
-    .toolbar input { flex: 1; min-width: 220px; }
-    .products { display: grid; gap: 14px; }
-    .product-card {
+    .helper-note, .note { color: var(--muted); font-size: 12px; line-height: 1.45; margin-top: 8px; }
+    .products, .orders { display: grid; gap: 14px; }
+    .product-card, .order-card {
       border: 1px solid var(--line);
       border-radius: 20px;
-      overflow: hidden;
       background: linear-gradient(180deg, rgba(18, 38, 31, 0.98), rgba(11, 20, 17, 0.98));
+      overflow: hidden;
     }
-    .product-card img {
-      width: 100%;
-      height: 190px;
-      object-fit: cover;
-      background: #173425;
-      display: block;
-    }
-    .product-body { padding: 16px; }
-    .meta { color: var(--muted); font-size: 13px; margin-bottom: 6px; }
-    .title { font-size: 20px; font-weight: 800; margin-bottom: 8px; }
-    .description { color: #d8f8e4; font-size: 13px; line-height: 1.45; margin-bottom: 12px; }
+    .product-card img { width: 100%; height: 190px; object-fit: cover; background: #173425; display: block; }
+    .product-body, .order-body { padding: 16px; }
+    .meta, .order-meta { color: var(--muted); font-size: 13px; line-height: 1.5; margin-bottom: 8px; }
+    .title, .order-title { font-size: 20px; font-weight: 800; margin-bottom: 8px; }
+    .description, .order-items { color: #d8f8e4; font-size: 13px; line-height: 1.45; margin-bottom: 12px; }
     .price { color: var(--accent); font-size: 22px; font-weight: 800; margin-bottom: 12px; }
-    .actions { display: flex; gap: 10px; flex-wrap: wrap; }
-    .action-btn {
-      flex: 1;
-      min-width: 130px;
-      border-radius: 12px;
-      padding: 11px 14px;
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 10px;
+      border-radius: 999px;
       border: 1px solid var(--line);
-      background: transparent;
-      color: var(--text);
-      cursor: pointer;
-      font-weight: 700;
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      margin-bottom: 12px;
     }
-    .danger { border-color: rgba(255, 126, 126, 0.4); color: var(--danger); }
     .status { margin-top: 12px; color: var(--accent); font-size: 14px; min-height: 20px; }
     .empty { color: var(--muted); padding: 18px 0; }
-    @media (max-width: 980px) {
+    @media (max-width: 1100px) {
       .grid { grid-template-columns: 1fr; }
-      .stats { grid-template-columns: repeat(2, 1fr); }
+      .stats { grid-template-columns: repeat(3, 1fr); }
     }
-    @media (max-width: 640px) {
+    @media (max-width: 700px) {
       body { padding: 14px; }
-      .stats { grid-template-columns: 1fr; }
-      .inline { grid-template-columns: 1fr; }
+      .stats, .inline { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -160,11 +130,22 @@
     <div class="topbar">
       <div>
         <div class="brand">LiteShop Admin</div>
-        <div class="subtitle">Управление товарами, категориями, ценами и превью</div>
+        <div class="subtitle">Товары, превью, заказы и статусы в одной панели</div>
       </div>
       <div class="api-box">
-        <div style="font-size:13px;color:var(--muted);margin-bottom:8px;">Адрес backend API</div>
-        <input id="apiBase" type="text" value="" style="width:100%;border:1px solid var(--line);border-radius:12px;background:#0c1813;color:#fff;padding:12px 14px;" />
+        <div class="field">
+          <label for="apiBase">Адрес backend API</label>
+          <input id="apiBase" type="text" value="" />
+        </div>
+        <div class="field">
+          <label for="adminKey">Admin API key</label>
+          <input id="adminKey" type="password" value="" placeholder="Вставь секретный ключ админки" />
+        </div>
+        <div class="helper-row">
+          <button class="mini-btn" type="button" onclick="saveAdminKey()">Сохранить ключ</button>
+          <button class="mini-btn danger" type="button" onclick="clearAdminKey()">Сбросить ключ</button>
+        </div>
+        <div class="note">Если в backend включён ADMIN_API_KEY, без него редактирование товаров и заказов не сработает.</div>
       </div>
     </div>
 
@@ -173,6 +154,8 @@
       <div class="stat"><div>Категорий</div><div class="stat-value" id="statCategories">0</div></div>
       <div class="stat"><div>Средняя цена</div><div class="stat-value" id="statAverage">0 ₽</div></div>
       <div class="stat"><div>Заказов</div><div class="stat-value" id="statOrders">0</div></div>
+      <div class="stat"><div>Ожидают</div><div class="stat-value" id="statPending">0</div></div>
+      <div class="stat"><div>Выручка</div><div class="stat-value" id="statRevenue">0 ₽</div></div>
     </div>
 
     <div class="grid">
@@ -194,7 +177,6 @@
             <label for="price">Цена в рублях</label>
             <input id="price" type="number" step="0.01" min="0.01" placeholder="1" />
           </div>
-
           <div class="field">
             <label for="sortOrder">Порядок сортировки</label>
             <input id="sortOrder" type="number" min="0" step="1" placeholder="100" />
@@ -203,13 +185,19 @@
 
         <div class="field">
           <label for="category">Категория</label>
-          <input id="category" list="categoryOptions" type="text" placeholder="Например: Тест или Brawl Stars" />
+          <input id="category" list="categoryOptions" type="text" placeholder="Например: Тест или Подписки" />
           <datalist id="categoryOptions"></datalist>
         </div>
 
         <div class="field">
           <label for="image">Ссылка на основное превью</label>
           <input id="image" type="text" placeholder="https://site.com/image.jpg" oninput="updatePreview()" />
+          <div class="helper-row">
+            <label class="mini-btn" for="imageUpload">Загрузить с компьютера</label>
+            <button class="mini-btn danger" type="button" onclick="clearImageFields()">Очистить картинки</button>
+          </div>
+          <input id="imageUpload" type="file" accept="image/*" style="display:none;" onchange="handleImageUpload(event)" />
+          <div class="helper-note">Можно вставить ссылку или загрузить файл. Картинка сохранится прямо в карточке товара.</div>
         </div>
 
         <div class="field">
@@ -236,32 +224,45 @@
         <div class="status" id="statusText"></div>
       </section>
 
-      <section class="panel">
-        <h2>Каталог товаров</h2>
+      <div class="stack">
+        <section class="panel">
+          <h2>Каталог товаров</h2>
+          <div class="toolbar">
+            <input id="searchInput" type="text" placeholder="Поиск по названию или категории" oninput="renderProducts()" />
+            <select id="filterStock" onchange="renderProducts()">
+              <option value="all">Все товары</option>
+              <option value="active">Только доступные</option>
+              <option value="hidden">Только скрытые</option>
+            </select>
+            <button class="btn btn-secondary" style="flex:0 0 auto;" onclick="loadAll()">Обновить</button>
+          </div>
+          <div id="productsList" class="products"></div>
+        </section>
 
-        <div class="toolbar">
-          <input id="searchInput" type="text" placeholder="Поиск по названию или категории" oninput="renderProducts()" />
-          <select id="filterStock" onchange="renderProducts()">
-            <option value="all">Все товары</option>
-            <option value="active">Только доступные</option>
-            <option value="hidden">Только скрытые</option>
-          </select>
-          <button class="btn btn-secondary" style="flex:0 0 auto;" onclick="loadAll()">Обновить</button>
-        </div>
-
-        <div id="productsList" class="products"></div>
-      </section>
+        <section class="panel">
+          <h2>Последние заказы</h2>
+          <div class="toolbar">
+            <button class="btn btn-secondary" style="flex:0 0 auto;" onclick="loadOrders()">Обновить заказы</button>
+          </div>
+          <div id="ordersList" class="orders"></div>
+        </section>
+      </div>
     </div>
   </div>
 
   <script>
     const PLACEHOLDER = "https://placehold.co/600x320/173425/ffffff?text=Preview";
     let products = [];
+    let orders = [];
     let summary = null;
     let editingId = null;
 
     function apiBase() {
       return document.getElementById("apiBase").value.trim().replace(/\/$/, "");
+    }
+
+    function adminKey() {
+      return document.getElementById("adminKey").value.trim();
     }
 
     function setStatus(text, isError = false) {
@@ -274,13 +275,25 @@
       return Number(value).toLocaleString("ru-RU", { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + " ₽";
     }
 
+    function statusLabel(status) {
+      const map = {
+        pending: "Ожидает",
+        paid: "Оплачен",
+        processing: "В работе",
+        done: "Готов",
+        cancelled: "Отменён"
+      };
+      return map[status] || status;
+    }
+
     function updatePreview() {
       const image = document.getElementById("image").value.trim();
       const banner = document.getElementById("banner").value.trim();
       document.getElementById("previewImage").src = image || banner || PLACEHOLDER;
     }
 
-    function resetForm() {
+    function resetForm(options = {}) {
+      const { keepStatus = false } = options;
       editingId = null;
       document.getElementById("formTitle").textContent = "Добавить товар";
       document.getElementById("title").value = "";
@@ -292,7 +305,9 @@
       document.getElementById("banner").value = "";
       document.getElementById("inStock").checked = true;
       document.getElementById("previewImage").src = PLACEHOLDER;
-      setStatus("");
+      if (!keepStatus) {
+        setStatus("");
+      }
     }
 
     function fillCategoryOptions() {
@@ -306,12 +321,13 @@
       document.getElementById("statCategories").textContent = summary.categories_total || 0;
       document.getElementById("statAverage").textContent = formatPrice(summary.average_price_rub || 0);
       document.getElementById("statOrders").textContent = summary.orders_total || 0;
+      document.getElementById("statPending").textContent = summary.orders_pending || 0;
+      document.getElementById("statRevenue").textContent = formatPrice(summary.revenue_total_rub || 0);
     }
 
     function getFilteredProducts() {
       const query = document.getElementById("searchInput").value.trim().toLowerCase();
       const stockFilter = document.getElementById("filterStock").value;
-
       return products.filter(item => {
         const matchesQuery = !query || item.title.toLowerCase().includes(query) || (item.category || "").toLowerCase().includes(query);
         const matchesStock = stockFilter === "all"
@@ -324,12 +340,10 @@
     function renderProducts() {
       const items = getFilteredProducts();
       const container = document.getElementById("productsList");
-
       if (!items.length) {
         container.innerHTML = `<div class="empty">По текущему фильтру товары не найдены.</div>`;
         return;
       }
-
       container.innerHTML = items.map(item => `
         <article class="product-card">
           <img src="${item.image || item.banner || PLACEHOLDER}" alt="${item.title}" onerror="this.src='${PLACEHOLDER}'" />
@@ -340,6 +354,7 @@
             <div class="price">${formatPrice(item.price_rub)}</div>
             <div class="actions">
               <button class="action-btn" onclick="editProduct('${item.id}')">Редактировать</button>
+              <button class="action-btn" onclick="duplicateProduct('${item.id}')">Дублировать</button>
               <button class="action-btn" onclick="toggleStock('${item.id}')">${item.in_stock ? "Скрыть" : "Показать"}</button>
               <button class="action-btn danger" onclick="deleteProduct('${item.id}')">Удалить</button>
             </div>
@@ -348,12 +363,47 @@
       `).join("");
     }
 
+    function renderOrders() {
+      const container = document.getElementById("ordersList");
+      if (!orders.length) {
+        container.innerHTML = `<div class="empty">Заказов пока нет или доступ к ним не настроен.</div>`;
+        return;
+      }
+      container.innerHTML = orders.map(order => `
+        <article class="order-card">
+          <div class="order-body">
+            <div class="order-title">Заказ ${order.id}</div>
+            <div class="status-badge">${statusLabel(order.status || "pending")}</div>
+            <div class="order-meta">
+              Пользователь: ${order.username || "без username"}<br />
+              ID: ${order.user_id}<br />
+              Сумма: ${formatPrice(order.total_rub || 0)}<br />
+              Оплата: ${order.payment_method || "не указана"}
+            </div>
+            <div class="order-items">
+              ${(order.items || []).map(item => `• ${item.title} x${item.qty} — ${formatPrice(item.line_total_rub || 0)}`).join("<br />")}
+            </div>
+            <div class="status-actions">
+              <button class="mini-btn" onclick="updateOrderStatus('${order.id}', 'pending')">Ожидает</button>
+              <button class="mini-btn" onclick="updateOrderStatus('${order.id}', 'paid')">Оплачен</button>
+              <button class="mini-btn" onclick="updateOrderStatus('${order.id}', 'processing')">В работе</button>
+              <button class="mini-btn" onclick="updateOrderStatus('${order.id}', 'done')">Готов</button>
+              <button class="mini-btn danger" onclick="updateOrderStatus('${order.id}', 'cancelled')">Отменён</button>
+            </div>
+          </div>
+        </article>
+      `).join("");
+    }
+
     async function request(path, options = {}) {
       const response = await fetch(apiBase() + path, {
-        headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+        headers: {
+          "Content-Type": "application/json",
+          ...(adminKey() ? { "x-admin-key": adminKey() } : {}),
+          ...(options.headers || {})
+        },
         ...options
       });
-
       const data = await response.json().catch(() => ({}));
       if (!response.ok || data.ok === false) {
         throw new Error(data.detail || data.error || "Ошибка запроса");
@@ -361,22 +411,60 @@
       return data;
     }
 
-    async function loadAll() {
+    async function loadAll(options = {}) {
+      const { silent = false } = options;
       try {
         const [productsData, summaryData] = await Promise.all([
           request("/products?include_hidden=true"),
           request("/admin/summary")
         ]);
-
         products = productsData.items || [];
         summary = summaryData;
         fillCategoryOptions();
         renderStats();
         renderProducts();
-        setStatus("Данные обновлены");
+        await loadOrders(true);
+        if (!silent) {
+          setStatus("Данные обновлены");
+        }
       } catch (error) {
         setStatus(error.message, true);
       }
+    }
+
+    async function loadOrders(silent = false) {
+      try {
+        const data = await request("/admin/orders?limit=20");
+        orders = data.items || [];
+        renderOrders();
+      } catch (error) {
+        orders = [];
+        renderOrders();
+        if (!silent) {
+          setStatus(error.message, true);
+        }
+      }
+    }
+
+    function clearImageFields() {
+      document.getElementById("image").value = "";
+      document.getElementById("banner").value = "";
+      updatePreview();
+    }
+
+    function handleImageUpload(event) {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = typeof reader.result === "string" ? reader.result : "";
+        document.getElementById("image").value = result;
+        updatePreview();
+        setStatus(`Изображение "${file.name}" загружено`);
+      };
+      reader.onerror = () => setStatus("Не удалось прочитать изображение", true);
+      reader.readAsDataURL(file);
+      event.target.value = "";
     }
 
     function collectPayload() {
@@ -394,7 +482,6 @@
 
     async function saveProduct() {
       const payload = collectPayload();
-
       if (!payload.title) {
         setStatus("Укажи название товара", true);
         return;
@@ -407,14 +494,14 @@
       try {
         if (editingId) {
           await request("/products/" + editingId, { method: "PUT", body: JSON.stringify(payload) });
+          await loadAll({ silent: true });
           setStatus("Товар обновлён");
         } else {
           await request("/products", { method: "POST", body: JSON.stringify(payload) });
+          await loadAll({ silent: true });
           setStatus("Товар добавлен");
         }
-
-        await loadAll();
-        resetForm();
+        resetForm({ keepStatus: true });
       } catch (error) {
         setStatus(error.message, true);
       }
@@ -423,7 +510,6 @@
     function editProduct(id) {
       const item = products.find(product => product.id === id);
       if (!item) return;
-
       editingId = id;
       document.getElementById("formTitle").textContent = "Редактировать товар";
       document.getElementById("title").value = item.title || "";
@@ -439,17 +525,34 @@
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
+    function duplicateProduct(id) {
+      const item = products.find(product => product.id === id);
+      if (!item) return;
+      editingId = null;
+      document.getElementById("formTitle").textContent = "Создать копию товара";
+      document.getElementById("title").value = `${item.title} (копия)`;
+      document.getElementById("description").value = item.description || "";
+      document.getElementById("price").value = item.price_rub ?? "";
+      document.getElementById("sortOrder").value = (item.sort_order ?? 100) + 1;
+      document.getElementById("category").value = item.category || "";
+      document.getElementById("image").value = item.image || "";
+      document.getElementById("banner").value = item.banner || "";
+      document.getElementById("inStock").checked = Boolean(item.in_stock);
+      updatePreview();
+      setStatus("Товар скопирован в форму. Проверь данные и сохрани.");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
     async function toggleStock(id) {
       const item = products.find(product => product.id === id);
       if (!item) return;
-
       try {
-        await request("/products/" + id, {
+        await request(`/products/${id}`, {
           method: "PUT",
           body: JSON.stringify({ ...item, in_stock: !item.in_stock })
         });
+        await loadAll({ silent: true });
         setStatus(item.in_stock ? "Товар скрыт" : "Товар снова доступен");
-        await loadAll();
       } catch (error) {
         setStatus(error.message, true);
       }
@@ -459,22 +562,51 @@
       const item = products.find(product => product.id === id);
       if (!item) return;
       if (!confirm(`Удалить товар "${item.title}"?`)) return;
-
       try {
-        await request("/products/" + id, { method: "DELETE" });
+        await request(`/products/${id}`, { method: "DELETE" });
         if (editingId === id) {
-          resetForm();
+          resetForm({ keepStatus: true });
         }
+        await loadAll({ silent: true });
         setStatus("Товар удалён");
-        await loadAll();
       } catch (error) {
         setStatus(error.message, true);
       }
     }
 
+    async function updateOrderStatus(orderId, status) {
+      try {
+        await request(`/admin/orders/${orderId}/status`, {
+          method: "PUT",
+          body: JSON.stringify({ status })
+        });
+        await loadAll({ silent: true });
+        setStatus(`Статус заказа обновлён: ${statusLabel(status)}`);
+      } catch (error) {
+        setStatus(error.message, true);
+      }
+    }
+
+    function saveAdminKey() {
+      localStorage.setItem("liteshop_admin_key", adminKey());
+      setStatus("Admin key сохранён");
+      loadAll();
+    }
+
+    function clearAdminKey() {
+      localStorage.removeItem("liteshop_admin_key");
+      document.getElementById("adminKey").value = "";
+      orders = [];
+      renderOrders();
+      setStatus("Admin key сброшен");
+    }
+
     document.getElementById("apiBase").value = window.LITESHOP_CONFIG?.API_BASE_URL || "";
+    document.getElementById("adminKey").value = localStorage.getItem("liteshop_admin_key") || "";
     resetForm();
     loadAll();
   </script>
 </body>
+</html>
+
 </html>
