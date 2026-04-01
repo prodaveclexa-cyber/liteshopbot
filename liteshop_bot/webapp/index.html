@@ -8,166 +8,310 @@
   <script src="./config.js"></script>
   <style>
     :root {
-      --bg: #07120e;
-      --card: #0f1f18;
-      --card-2: #142920;
-      --line: #1d6a45;
-      --text: #f4fff8;
-      --muted: #96cfb1;
-      --accent: #60f0a1;
-      --accent-2: #1dbd69;
-      --danger: #ff7e7e;
+      --bg: #07110d;
+      --bg-soft: #0d1814;
+      --surface: rgba(14, 26, 20, 0.96);
+      --surface-2: rgba(19, 34, 27, 0.96);
+      --line: rgba(138, 181, 157, 0.18);
+      --text: #f3f7f4;
+      --muted: #9fb4a9;
+      --accent: #d9f66f;
+      --accent-soft: #ecfcb1;
+      --accent-dark: #122014;
+      --danger: #ff9a8f;
+      --shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
-    body { background: radial-gradient(circle at top, #13301f 0%, var(--bg) 55%); color: var(--text); }
-    .app { max-width: 430px; margin: 0 auto; min-height: 100vh; padding: 16px 16px 96px; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+      background:
+        radial-gradient(circle at top, rgba(219, 246, 118, 0.08), transparent 30%),
+        linear-gradient(180deg, #08120d 0%, #050a08 100%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    .app {
+      max-width: 440px;
+      margin: 0 auto;
+      min-height: 100vh;
+      padding: 18px 16px 104px;
+    }
     .page { display: none; }
     .page.active { display: block; }
     .topbar { margin-bottom: 18px; }
-    .brand { font-size: 30px; font-weight: 800; }
-    .subtitle { color: var(--muted); margin-top: 6px; font-size: 14px; }
+    .brand {
+      font-size: 30px;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+    }
+    .subtitle {
+      color: var(--muted);
+      margin-top: 6px;
+      font-size: 14px;
+      line-height: 1.45;
+    }
     .hero {
-      padding: 22px;
-      border-radius: 24px;
-      background: linear-gradient(135deg, #17603d, #54e79b);
-      color: #072112;
-      margin-bottom: 20px;
-      box-shadow: 0 18px 40px rgba(14, 71, 42, 0.35);
+      position: relative;
+      overflow: hidden;
+      padding: 24px;
+      border-radius: 28px;
+      background:
+        linear-gradient(135deg, rgba(217, 246, 111, 0.92), rgba(245, 255, 211, 0.92)),
+        linear-gradient(180deg, #1e3429, #0c1713);
+      color: #0d1b11;
+      box-shadow: var(--shadow);
+      margin-bottom: 22px;
+    }
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: auto -30px -30px auto;
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.22);
+      filter: blur(10px);
     }
     .hero-badge {
-      display: inline-block;
-      padding: 6px 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
       border-radius: 999px;
-      background: rgba(255,255,255,0.22);
+      background: rgba(12, 24, 18, 0.08);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+    .hero h1 {
+      font-size: 27px;
+      line-height: 1.05;
+      letter-spacing: -0.05em;
       margin-bottom: 10px;
+      max-width: 280px;
+    }
+    .hero p {
+      font-size: 14px;
+      line-height: 1.5;
+      max-width: 280px;
+    }
+    .hero-methods {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 16px;
+    }
+    .hero-methods span {
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(12, 24, 18, 0.1);
       font-size: 12px;
       font-weight: 700;
     }
-    .hero h1 { font-size: 24px; margin-bottom: 8px; }
-    .hero p { font-size: 14px; line-height: 1.45; }
-    .section { margin-bottom: 22px; }
-    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-    .section-title { font-size: 20px; font-weight: 800; }
-    .section-link { color: var(--accent); cursor: pointer; font-size: 14px; }
-    .chips { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px; }
+    .section { margin-bottom: 24px; }
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .section-title {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+    }
+    .section-link {
+      color: var(--accent-soft);
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .chips {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      scrollbar-width: none;
+    }
+    .chips::-webkit-scrollbar { display: none; }
     .chip {
       flex-shrink: 0;
-      border-radius: 16px;
       border: 1px solid var(--line);
-      background: rgba(17, 42, 29, 0.92);
+      background: rgba(13, 24, 19, 0.9);
       color: var(--text);
-      padding: 12px 16px;
-      font-size: 14px;
+      border-radius: 18px;
+      padding: 12px 15px;
+      font-size: 13px;
       font-weight: 700;
       cursor: pointer;
     }
     .list { display: grid; gap: 14px; }
     .card {
-      background: linear-gradient(180deg, rgba(18, 38, 28, 0.96), rgba(11, 23, 17, 0.96));
-      border: 1px solid var(--line);
-      border-radius: 24px;
       overflow: hidden;
+      border-radius: 28px;
+      background: linear-gradient(180deg, rgba(18, 31, 25, 0.98), rgba(10, 17, 14, 0.98));
+      border: 1px solid var(--line);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
     }
     .card img {
       width: 100%;
-      height: 170px;
+      height: 188px;
       object-fit: cover;
-      background: #173525;
       display: block;
+      background: #14201a;
     }
-    .card-body { padding: 16px; }
-    .category { color: var(--muted); font-size: 13px; margin-bottom: 8px; }
-    .title { font-size: 18px; font-weight: 800; margin-bottom: 8px; }
-    .description { color: #d6f9e2; font-size: 13px; line-height: 1.45; margin-bottom: 12px; }
-    .price-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-    .price { color: var(--accent); font-size: 22px; font-weight: 800; }
+    .card-body { padding: 18px; }
+    .category {
+      color: var(--accent-soft);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .title {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      margin-bottom: 8px;
+    }
+    .description {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+      margin-bottom: 14px;
+    }
+    .price-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .price {
+      font-size: 28px;
+      font-weight: 900;
+      letter-spacing: -0.05em;
+      color: var(--accent);
+    }
     .btn {
       border: none;
-      border-radius: 14px;
-      padding: 13px 16px;
-      background: linear-gradient(135deg, var(--accent-2), var(--accent));
-      color: #062112;
+      border-radius: 16px;
+      padding: 14px 18px;
+      background: linear-gradient(135deg, var(--accent), #f2ffb9);
+      color: var(--accent-dark);
       font-size: 15px;
       font-weight: 800;
       cursor: pointer;
+      box-shadow: 0 8px 22px rgba(217, 246, 111, 0.18);
     }
     .btn-secondary {
       width: 100%;
       background: transparent;
       color: var(--text);
       border: 1px solid var(--line);
+      box-shadow: none;
     }
     .box {
-      background: rgba(12, 26, 19, 0.94);
+      border-radius: 26px;
+      background: linear-gradient(180deg, rgba(16, 29, 23, 0.98), rgba(9, 15, 12, 0.98));
       border: 1px solid var(--line);
-      border-radius: 22px;
       padding: 18px;
     }
-    .cart-item { padding: 14px 0; border-bottom: 1px solid rgba(96, 240, 161, 0.14); }
+    .payment-hint {
+      margin-top: 14px;
+      padding: 14px;
+      border-radius: 18px;
+      background: rgba(217, 246, 111, 0.06);
+      border: 1px solid rgba(217, 246, 111, 0.12);
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .cart-item { padding: 14px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.06); }
     .cart-item:last-child { border-bottom: none; }
-    .cart-title { font-size: 17px; font-weight: 800; margin-bottom: 6px; }
+    .cart-title { font-size: 18px; font-weight: 800; margin-bottom: 6px; }
     .cart-line { color: var(--muted); font-size: 13px; margin-bottom: 8px; }
     .cart-actions { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
     .qty-controls { display: flex; align-items: center; gap: 8px; }
     .qty-btn {
-      width: 32px; height: 32px; border-radius: 10px; border: 1px solid var(--line);
-      background: transparent; color: var(--text); cursor: pointer; font-weight: 800;
+      width: 34px;
+      height: 34px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: transparent;
+      color: var(--text);
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
     }
     .total {
       margin-top: 16px;
       padding: 16px;
-      border-radius: 18px;
-      background: #12271e;
-      border: 1px solid var(--line);
-      font-size: 20px;
-      font-weight: 800;
+      border-radius: 20px;
+      background: rgba(217, 246, 111, 0.06);
+      border: 1px solid rgba(217, 246, 111, 0.14);
+      font-size: 22px;
+      font-weight: 900;
+      color: var(--accent);
     }
-    .empty, .loading { color: var(--muted); padding: 14px 0; }
+    .empty, .loading {
+      color: var(--muted);
+      padding: 16px 0;
+      font-size: 14px;
+    }
     .bottom-nav {
       position: fixed;
-      bottom: 0;
       left: 50%;
+      bottom: 0;
       transform: translateX(-50%);
       width: 100%;
-      max-width: 430px;
-      background: rgba(8, 19, 14, 0.97);
-      border-top: 1px solid var(--line);
+      max-width: 440px;
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      padding: 10px 8px 14px;
+      gap: 10px;
+      padding: 12px 12px 16px;
+      background: linear-gradient(180deg, rgba(4, 8, 6, 0), rgba(4, 8, 6, 0.96) 35%);
       backdrop-filter: blur(12px);
     }
     .nav-btn {
-      background: transparent;
-      border: none;
+      border: 1px solid transparent;
+      background: rgba(10, 17, 14, 0.88);
       color: var(--muted);
-      display: grid;
-      gap: 4px;
-      place-items: center;
-      cursor: pointer;
+      border-radius: 18px;
+      padding: 12px 8px;
       font-size: 12px;
-      font-weight: 700;
+      font-weight: 800;
+      cursor: pointer;
     }
-    .nav-btn.active { color: var(--text); }
+    .nav-btn.active {
+      color: var(--text);
+      border-color: var(--line);
+      background: rgba(18, 31, 25, 0.96);
+    }
     .toast {
       position: fixed;
       left: 50%;
-      bottom: 94px;
+      bottom: 98px;
       transform: translateX(-50%) translateY(20px);
       opacity: 0;
       pointer-events: none;
-      transition: 0.2s ease;
-      background: #10251a;
+      transition: 0.22s ease;
+      background: rgba(10, 17, 14, 0.96);
       border: 1px solid var(--line);
-      border-radius: 14px;
+      border-radius: 16px;
       padding: 12px 16px;
+      color: var(--text);
       min-width: 220px;
       text-align: center;
-      color: var(--text);
       font-size: 14px;
+      box-shadow: var(--shadow);
     }
-    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
   </style>
 </head>
 <body>
@@ -175,13 +319,19 @@
     <section id="homePage" class="page active">
       <div class="topbar">
         <div class="brand">LiteShop</div>
-        <div class="subtitle">Магазин внутриигровых товаров</div>
+        <div class="subtitle">Минималистичный магазин игровых товаров с быстрым оформлением заказа внутри Telegram.</div>
       </div>
 
       <div class="hero">
-        <div class="hero-badge">MINI APP</div>
-        <h1>Покупай быстро прямо внутри Telegram</h1>
-        <p>Выбирай товар, добавляй его в корзину и оплачивай заказ через Stars. Тестовый товар за 1 рубль уже добавлен.</p>
+        <div class="hero-badge">LiteShop • Telegram Mini App</div>
+        <h1>Быстрые покупки без лишних шагов</h1>
+        <p>Выбирай товар, собирай корзину и отправляй заказ в бот. Дальше можно оплатить Stars, рублями, тенге или криптой.</p>
+        <div class="hero-methods">
+          <span>Telegram Stars</span>
+          <span>Рубли</span>
+          <span>Тенге</span>
+          <span>USDT / TON</span>
+        </div>
       </div>
 
       <div class="section">
@@ -205,7 +355,7 @@
     <section id="catalogPage" class="page">
       <div class="topbar">
         <div class="brand">Каталог</div>
-        <div class="subtitle">Все доступные товары</div>
+        <div class="subtitle">Все доступные товары магазина.</div>
       </div>
 
       <div class="section">
@@ -222,7 +372,7 @@
     <section id="cartPage" class="page">
       <div class="topbar">
         <div class="brand">Корзина</div>
-        <div class="subtitle">Проверь товары перед оплатой</div>
+        <div class="subtitle">Проверь товары перед тем, как отправить заказ в бот.</div>
       </div>
       <div id="cartContent"></div>
     </section>
@@ -241,15 +391,17 @@
     if (tg) {
       tg.ready();
       tg.expand();
+      tg.setHeaderColor?.("#07110d");
+      tg.setBackgroundColor?.("#07110d");
     }
 
     const API = (window.LITESHOP_CONFIG?.API_BASE_URL || "").replace(/\/$/, "");
-    const PLACEHOLDER = "https://placehold.co/600x320/173525/ffffff?text=LiteShop";
+    const PLACEHOLDER = "https://placehold.co/600x360/16221b/eef7f1?text=LiteShop";
 
     let products = [];
     let categoryFilter = "all";
     let toastTimer = null;
-    let cart = JSON.parse(localStorage.getItem("liteshop_cart_v2") || "[]");
+    let cart = JSON.parse(localStorage.getItem("liteshop_cart_v3") || "[]");
 
     function showToast(text) {
       const el = document.getElementById("toast");
@@ -264,7 +416,7 @@
     }
 
     function persistCart() {
-      localStorage.setItem("liteshop_cart_v2", JSON.stringify(cart));
+      localStorage.setItem("liteshop_cart_v3", JSON.stringify(cart));
     }
 
     function getCategories() {
@@ -334,7 +486,9 @@
       document.querySelectorAll(".nav-btn").forEach(node => node.classList.remove("active"));
       document.getElementById(page + "Page").classList.add("active");
       document.getElementById("nav-" + page).classList.add("active");
-      if (page === "cart") renderCart();
+      if (page === "cart") {
+        renderCart();
+      }
     }
 
     function addToCart(productId) {
@@ -371,6 +525,13 @@
       renderCart();
     }
 
+    function clearCart() {
+      cart = [];
+      persistCart();
+      renderCart();
+      showToast("Корзина очищена");
+    }
+
     function renderCart() {
       const container = document.getElementById("cartContent");
       if (!cart.length) {
@@ -388,7 +549,7 @@
               <div class="cart-actions">
                 <div class="price">${formatPrice(item.price_rub * item.qty)}</div>
                 <div class="qty-controls">
-                  <button class="qty-btn" onclick="changeQty('${item.product_id}', -1)">-</button>
+                  <button class="qty-btn" onclick="changeQty('${item.product_id}', -1)">−</button>
                   <div>${item.qty}</div>
                   <button class="qty-btn" onclick="changeQty('${item.product_id}', 1)">+</button>
                 </div>
@@ -398,15 +559,11 @@
           <div class="total">Итого: ${formatPrice(total)}</div>
           <button class="btn" style="width:100%;margin-top:14px;" onclick="checkout()">Оформить заказ</button>
           <button class="btn btn-secondary" style="margin-top:10px;" onclick="clearCart()">Очистить корзину</button>
+          <div class="payment-hint">
+            После отправки заказа бот предложит оплату через Telegram Stars, рубли, тенге или крипту.
+          </div>
         </div>
       `;
-    }
-
-    function clearCart() {
-      cart = [];
-      persistCart();
-      renderCart();
-      showToast("Корзина очищена");
     }
 
     function checkout() {
@@ -465,3 +622,4 @@
   </script>
 </body>
 </html>
+
